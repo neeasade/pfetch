@@ -75,26 +75,29 @@ log() {
         info=$*
     }
 
-    # Move the cursor to the right, the width of the ascii art with an
-    # additional gap for text spacing.
-    printf '[%sC' "${ascii_width--1}"
+	(
+		# Move the cursor to the right, the width of the ascii art with an
+		# additional gap for text spacing.
+		printf '[%sC' "${ascii_width--1}"
 
-    # Print the info name and color the text.
-    printf '[3%s;1m%s[m' "${PF_COL1-4}" "$name"
+		# Print the info name and color the text.
+		printf '[3%s;1m%s[m' "${PF_COL1-4}" "$name"
 
-    # Print the info name and info data separator.
-    printf '%s' "$PF_SEP"
+		# Print the info name and info data separator.
+		printf '%s' "$PF_SEP"
 
-    # Move the cursor backward the length of the *current* info name and
-    # then move it forwards the length of the *longest* info name. This
-    # aligns each info data line.
-    printf '[%sD[%sC' "${#name}" "${PF_ALIGN-$info_length}"
+		# Move the cursor backward the length of the *current* info name and
+		# then move it forwards the length of the *longest* info name. This
+		# aligns each info data line.
+		printf '[%sD[%sC' "${#name}" "${PF_ALIGN-$info_length}"
 
-    # Print the info data, color it and strip all leading whitespace
-    # from the string.
-    printf '[3%sm%s[m\n' "${PF_COL2-7}" "$info"
+		# Print the info data, color it and strip all leading whitespace
+		# from the string.
+		printf '[3%sm%s[m\n' "${PF_COL2-7}" "$info"
 
-    # Keep track of the number of times 'log()' has been run.
+	) >&6
+
+	# Keep track of the number of times 'log()' has been run.
     info_height=$((${info_height:-0} + 1))
 }
 
@@ -112,7 +115,7 @@ get_title() {
     # shellcheck disable=SC2039
     hostname=${HOSTNAME:-${hostname:-$(hostname)}}
 
-    log "[3${PF_COL3:-1}m${user}${c7}@[3${PF_COL3:-1}m${hostname}" " " >&6
+    log "[3${PF_COL3:-1}m${user}${c7}@[3${PF_COL3:-1}m${hostname}" " "
 }
 
 get_os() {
@@ -123,7 +126,7 @@ get_os() {
     # On first run, this function displays _nothing_, only on the second
     # invocation is 'log()' called.
     [ "$distro" ] && {
-        log os "$distro" >&6
+        log os "$distro"
         return
     }
 
@@ -283,7 +286,7 @@ get_kernel() {
 
         *)
             # '$kernel' is the cached output of 'uname -r'.
-            log kernel "$kernel" >&6
+            log kernel "$kernel"
         ;;
    esac
 }
@@ -354,7 +357,7 @@ get_host() {
     done
 
     # '$arch' is the cached output from 'uname -m'.
-    log host "${host:-$arch}" >&6
+    log host "${host:-$arch}"
 }
 
 get_uptime() {
@@ -409,7 +412,7 @@ get_uptime() {
     [ "$h" = 0 ] || uptime="${uptime}${h}h "
     [ "$m" = 0 ] || uptime="${uptime}${m}m "
 
-    log uptime "${uptime:-0m}" >&6
+    log uptime "${uptime:-0m}"
 }
 
 get_pkgs() {
@@ -509,7 +512,7 @@ get_pkgs() {
         esac | wc -l
     `
 
-    [ "$packages" -gt 1 ] && log pkgs "$packages" >&6
+    [ "$packages" -gt 1 ] && log pkgs "$packages"
 }
 
 get_memory() {
@@ -691,7 +694,7 @@ get_memory() {
         ;;
     esac
 
-    log memory "${mem_used:-?}M / ${mem_full:-?}M" >&6
+    log memory "${mem_used:-?}M / ${mem_full:-?}M"
 }
 
 get_wm() {
@@ -820,7 +823,7 @@ get_wm() {
         ;;
     esac
 
-    log wm "$wm" >&6
+    log wm "$wm"
 }
 
 
@@ -831,18 +834,18 @@ get_de() {
     #
     # Display the value of '$XDG_CURRENT_DESKTOP', if it's empty,
     # display the value of '$DESKTOP_SESSION'.
-    log de "${XDG_CURRENT_DESKTOP:-$DESKTOP_SESSION}" >&6
+    log de "${XDG_CURRENT_DESKTOP:-$DESKTOP_SESSION}"
 }
 
 get_shell() {
     # Display the basename of the '$SHELL' environment variable.
-    log shell "${SHELL##*/}" >&6
+    log shell "${SHELL##*/}"
 }
 
 get_editor() {
     # Display the value of '$VISUAL', if it's empty, display the
     # value of '$EDITOR'.
-    log editor "${VISUAL:-$EDITOR}" >&6
+    log editor "${VISUAL:-$EDITOR}"
 }
 
 get_palette() {
@@ -1380,12 +1383,14 @@ sync_output() {
          }
 
          # Print the info name and color the text.
-         name_part=$(printf '[3%sm[1m%s[m' "${PF_COL1-4}" "$name")
-         pad_right "$name_part$PF_SEP" "${PF_ALIGN-$info_length}"
-         printf '[3%sm%s[m' "${PF_COL2-7}" "$info"
-     }
+		 (
+			 name_part=$(printf '[3%sm[1m%s[m' "${PF_COL1-4}" "$name")
+			 pad_right "$name_part$PF_SEP" "${PF_ALIGN-$info_length}"
+			 printf '[3%sm%s[m' "${PF_COL2-7}" "$info"
+		 ) >&6
+	 }
 
-     # iterate over ascii lines if it was included as an option
+	 # iterate over ascii lines if it was included as an option
      if printf "$*" | grep "ascii" >/dev/null; then
          set +f -- $(printf "$*" | sed 's/ascii//')
          get_ascii 6>/dev/null
@@ -1519,6 +1524,10 @@ main() {
         printf '\n'
         i=$((i + 1))
     done >&6
+}
+
+get_theme() {
+	log theme $(theme getval THEME_NAME)
 }
 
 main "$@"
