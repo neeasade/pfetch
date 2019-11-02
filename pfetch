@@ -1052,6 +1052,21 @@ get_ascii() {
 			EOF
         ;;
 
+		GNU*)
+            read_ascii 3 <<-EOF
+		${c4}    ,           ,
+		   /             \\
+		  ((__-^^-,-^^-__))
+		   \`-_---' \`---_-'
+		    \`--|o\` 'o|--'
+		       \  \`  /
+		        ): :(
+		        :o_o:
+		         "-"
+		EOF
+            ;;
+
+
         [Hh]aiku*)
             read_ascii 3 <<-EOF
 				${c3}       ,^,
@@ -1100,7 +1115,6 @@ get_ascii() {
 				  \\_________/
 			EOF
         ;;
-
 
         [Ll]inux*)
             read_ascii 4 <<-EOF
@@ -1528,6 +1542,10 @@ main() {
 
 get_theme() {
 	log theme $(theme getval THEME_NAME)
+}
+
+get_playlist() {
+	log playlist $(music info | tail -n 1 | awk '{print $2}')
 }
 
 main "$@"
